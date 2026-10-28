@@ -7,6 +7,9 @@
 | Behavior Tree (BT) | Condition/Action/Composite 노드의 성공·실패로 행동을 선택하는 계층 구조 |
 | Blackboard | 현재 기체·표적 등 BT 노드가 함께 읽고 결정을 기록하는 스텝별 데이터 |
 | Brain | `info -> Discrete(27) action` 인터페이스를 제공하는 파일럿. 규칙, BT, XML tree, PPO 등이 등록됩니다. |
+| Rule-based | 사람이 작성한 조건과 행동 규칙으로 의사결정을 만드는 방식. BT는 규칙을 구조화하는 한 가지 방법입니다. |
+| Point-mass | 항공기의 기동을 계산 효율을 위해 간략화한 동역학 모델 |
+| JSBSim | 이 프로젝트에서 선택적으로 사용하는 F-16 항공기 시뮬레이션 백엔드 |
 | CBBA-style | 입찰 효용과 이웃 consensus를 적용한 이 프로젝트의 단일 표적 할당 적응 |
 | Episode | reset부터 승패/시간 제한 종료까지의 시뮬레이션 한 판 |
 | Hungarian | 중앙에서 전체 비용 행렬을 최소화하는 할당 기준 알고리즘 |

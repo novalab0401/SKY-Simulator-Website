@@ -1,5 +1,5 @@
 site_name: SKY Simulator Lab
-site_description: BT, 강화학습, 분산 표적 할당으로 배우는 군집 공중전 프로젝트
+site_description: 전투기 시뮬레이션에서 규칙 기반 조종, Behavior Tree, 강화학습을 배우는 실습 프로젝트
 site_url: https://novalab0401.github.io/SKY-Simulator-Website/
 docs_dir: docs
 site_dir: site
@@ -46,12 +46,13 @@ nav:
       - 소스 저장소 안내: repository.md
   - 학습 경로:
       - 프로젝트와 첫 실행: tutorials/01-first-flight.md
-      - 구조와 군집전: tutorials/02-project-and-swarm.md
+      - 전투 시뮬레이터 구조: tutorials/02-project-and-swarm.md
       - Behavior Tree: tutorials/03-behavior-trees.md
       - 강화학습: tutorials/04-reinforcement-learning.md
-      - 분산 할당: tutorials/05-assignment-algorithms.md
-      - 직접 개발하기: tutorials/06-build-a-plugin.md
-      - 검증과 다음 실험: tutorials/07-evaluate-and-extend.md
+      - 결과 해석과 작은 실험: tutorials/07-evaluate-and-extend.md
+  - 선택 확장:
+      - N:M 표적 할당: tutorials/05-assignment-algorithms.md
+      - 플러그인과 직접 개발: tutorials/06-build-a-plugin.md
   - 참고:
       - 용어 사전: reference/glossary.md
       - 이 프로젝트의 한계: reference/limitations.md

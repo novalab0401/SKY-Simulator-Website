@@ -1,104 +1,106 @@
-# 6. 직접 개발하기: 새 할당기와 BT 행동
+# 선택 확장 B. 사용자 플러그인과 직접 개발
 
-**완료 기준:** 알고리즘 인터페이스, 레지스트리, 환경 연결 위치와 최소 회귀 테스트를 찾고 새 코드를 추가합니다.
+**선행 권장:** 단일 기체 조종의 규칙·BT·강화학습 학습 경로를 먼저 살펴보고,
+여러 기체의 임무 할당을 확장하고 싶을 때 진행하세요.
 
-## A. 새 할당 알고리즘 추가하기
+**완료 기준:** 중앙형 또는 에이전트별 할당 플러그인 계약을 이해하고, 작은 예제를 설정에서 로드해 테스트합니다.
 
-각 알고리즘은 `swarm_aircombat/assignment/` 아래 **개별 파일**에 구현합니다.
-예를 들어 `novel.py`를 추가하고 기존 플러그인과 같은 callable 계약을 따릅니다.
+## 먼저 경계 이해하기
 
-```python
-from ..core.aircraft import AircraftState
-from .cost import AssignmentConfig
+현재 외부 플러그인 계약은 **표적 할당기**를 위한 것입니다. `brain`에 제3자 파일럿을
+바로 연결하는 일반 플러그인 계약은 아닙니다. 규칙/BT 조종을 직접 수정하려면
+`swarm_aircombat/bt/brain.py`, `swarm_aircombat/bt/swarm_tree.py`와
+`swarm_aircombat/bt/trees/`를 살펴보세요.
 
+할당 알고리즘의 점수·입찰·합의 방식은 작성자가 정합니다. 시뮬레이터는 입력과
+결과 형식을 제공하고, 반환된 상대 표적 인덱스가 유효한지 확인합니다.
 
-def novel(agents: list[AircraftState],
-          targets: list[AircraftState],
-          alive: list[bool],
-          health: list[float],
-          current: list[int | None],
-          cfg: AssignmentConfig) -> list[int | None]:
-    # 각 agent에 대해 표적 index를 반환. 표적이 없으면 None.
-    ...
-```
+## 중앙형 플러그인
 
-반환 목록은 입력 기체 수와 같아야 합니다. 할당 값은 표적 인덱스 또는 `None`이어야 합니다.
-기존 모델을 재사용하고 싶으면 `cost.py`의 `_cost_matrix`/`_slots` 또는 `consensus.py`의 경매 유틸을 살펴보세요.
-새 알고리즘의 핵심은 계속 새 파일 안에 둡니다.
+중앙형 알고리즘은 전체 편대 문제를 한 번에 받고 각 편대 기체에 대응하는 적 표적
+인덱스 또는 `None`을 반환합니다.
 
-그 다음 `swarm_aircombat/assignment/registry.py`에서 새 구현을 가져와 `ASSIGNERS`에 이름을 추가합니다.
-환경에는 이미 레지스트리를 거치는 연결부가 있으므로, 이 확장 방식은 새 YAML 선택을 즉시 가능하게 합니다.
-
-```python
-from .novel import novel
-
-ASSIGNERS = {
-    # 기존 이름들...
-    "novel": novel,
-}
-```
-
-`combat.yaml`의 주석에 선택지를 업데이트하고 다음처럼 지정합니다.
+`combat.yaml`에서 Python 파일 경로는 YAML 파일이 있는 디렉터리를 기준으로 합니다.
 
 ```yaml
 team:
   blue:
-    assigner: novel
+    assigner:
+      type: central
+      callable: my_assignment.py:assign
+      config: {}
 ```
 
-## B. 먼저 검증 테스트 작성하기
+```python
+def assign(problem, config):
+    alive_targets = [
+        j for j, alive in enumerate(problem.target_alive) if alive
+    ]
+    target = alive_targets[0] if alive_targets else None
+    return [target for _ in problem.agents]
+```
 
-권장 테스트 확인 항목:
+`problem`에는 `agents`, `targets`, `target_alive`, `target_health`,
+`current_targets`, `config`가 있습니다. 반환값은 friendly aircraft마다 하나씩
+있어야 하며, target index는 opposing team의 인덱스입니다. `None`은 표적 미할당을 뜻합니다.
 
-- 입력 에이전트마다 반환값이 하나씩 있는가?
-- 죽은 표적을 반환하지 않는가?
-- `None` 반환과 센싱 범위 제한을 의도대로 처리하는가?
-- 가능한 통신 그래프에서 capacity 제약을 지키는가?
-- 플러그인 등록 이름으로 `registry.load("novel")`이 구현을 반환하는가?
-- 이 알고리즘 선택이 반대편 팀 설정에는 영향을 주지 않는가?
+## 에이전트별 분산형 플러그인
 
-테스트 파일은 `tests/test_distributed_assignment.py`의 구조를 참고하고, 짧은 반복 확인은:
+이 방식은 각 기체마다 `Plugin(agent)` 객체를 만들고 재할당 시점마다
+`decide(blackboard)`를 호출합니다.
+
+```yaml
+team:
+  red:
+    assigner:
+      type: agent
+      class: my_allocator.py:MyAllocator
+      config: {}
+```
+
+```python
+class MyAllocator:
+    def __init__(self, agent):
+        self.agent = agent
+
+    def decide(self, blackboard):
+        tasks = blackboard["local_tasks_info"]
+        if not tasks:
+            return None
+
+        chosen = min(
+            tasks,
+            key=lambda task: self.agent.position.distance_to(task.position),
+        )
+        self.agent.message_to_share = {"agent_id": self.agent.agent_id}
+        return chosen.task_id
+```
+
+blackboard에는 `agent_id`, `local_tasks_info`, `local_agents_info`,
+`current_task_id`, `current_target_id`, `assignment_config`가 들어 있습니다.
+`local_tasks_info`는 해당 기체가 감지한 살아 있는 표적 목록이며 `task_id`는 상대 편대
+내 인덱스입니다. 에이전트 컨텍스트의 `messages_received`에서 통신 이웃의 이전
+할당 주기 메시지를 읽고, 다음 메시지는 `message_to_share`에 기록합니다.
+
+플러그인 인스턴스는 에피소드마다 새로 생성됩니다. 메시지는 재할당 주기마다 전달되는
+동기식 스냅샷으로, 지연·패킷 손실 모델은 없습니다. 이 계약은 알고리즘을 연결하는
+기능이지 논문 충실도를 확인해주는 검증 도구가 아닙니다.
+
+## 무엇을 테스트할까
+
+- 플러그인 참조가 로드되는가?
+- 중앙형은 기체 수와 같은 길이의 valid target index/`None` 목록을 반환하는가?
+- 에이전트형은 감지하지 못한 표적을 반환하지 않는가?
+- 메시지 없는 경우, 죽은 표적, 통신이 끊긴 경우를 의도대로 처리하는가?
+- 알고리즘 규칙을 작은 손계산 예제와 테스트로 확인했는가?
 
 ```bash
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -q \
   tests/test_distributed_assignment.py tests/test_swarm.py
 ```
 
-## C. BT는 세부 계층이 다르다
+테스트 통과는 계약과 작성한 사례에서 코드가 기대대로 동작한다는 근거입니다.
+그 자체가 알고리즘의 우수성, 현실 전투 효과 또는 논문 재현을 증명하지는 않습니다.
 
-군집 행동 트리 실행 흐름은 `swarm_aircombat/bt/swarm_tree.py`,
-노드 계약은 `swarm_aircombat/bt/core.py`에 있습니다.
-새 Condition/Action은 Blackboard 입력과 `Status` 반환 규칙을 명확히 해야 합니다.
-
-```python
-from .core import Action, Status
-
-def my_action(bb):
-    # bb에서 필요한 상태를 읽고 bb.decision을 설정
-    return Status.SUCCESS
-
-node = Action("my_action", my_action)
-```
-
-단, 현재 XML loader가 임의의 Python 노드 클래스를 외부에서 자동 발견하지는 않습니다.
-Python 군집 트리 변경은 `build_tree()`를 고치고 분기 테스트를 추가하는 쪽이 간단합니다.
-XML 트리 파일을 추가/변경할 때는 `xml_tree.py`의 지원 태그와 파라미터 검증을 따라야 합니다.
-
-새 BT 규칙을 추가할 때 테스트로 확인할 것:
-
-1. 참/거짓 Condition에서 기대한 `Status`를 반환하는가?
-2. `Selector` 우선순위가 기존 안전 분기를 깨지 않는가?
-3. Action이 설정하는 결정이 환경이 이해하는 형식인가?
-4. 해당 분기가 선택됐다는 `bb.trace` 또는 리플레이 증거가 있는가?
-5. 전투 성능 주장은 별도의 다판 평가로 뒷받침되는가?
-
-## 코드 변경의 최소 끝맺음
-
-```bash
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -q
-git diff --check
-```
-
-새 코드를 추가했다면 문서의 구조표, YAML의 선택 목록, 테스트 이름과 결과 재현법도 함께 갱신합니다.
-
-다음: [평가 결과를 올바르게 읽고 확장하기](07-evaluate-and-extend.md)
+주 조종 학습으로 돌아가기: [Behavior Tree](03-behavior-trees.md) ·
+[강화학습](04-reinforcement-learning.md)

@@ -1,26 +1,25 @@
-# 2. 프로젝트 구조와 군집전
+# 2. 전투 시뮬레이터 구조
 
-**완료 기준:** 한 시뮬레이션 스텝에서 환경, 할당, BT, 조종, 물리가 어떤 순서로 연결되는지 파일을 따라갑니다.
+**완료 기준:** 전투 한 스텝에서 항공기 상태가 관측되고, 조종 결정이 비행 명령과 교전 결과로 이어지는 흐름을 설명합니다.
 
 ## N:M은 무엇인가
 
 N:M은 blue N대와 red M대가 싸우는 설정입니다. 각 항공기는 한 번에 추격할 표적을 할당받습니다.
 “군집”이라는 말이 곧 모든 구성요소가 분산되어 있다는 뜻은 아닙니다.
 
-현재 분산형 알고리즘은 할당 정보를 제한된 이웃 통신으로 교환합니다. 월드 물리와 평가기는 한 프로세스에서 전체 환경을 관리합니다.
-즉, **분산 임무 할당을 시뮬레이션하는 연구용 환경**이지 분산 물리 시뮬레이터나 실기체 통신 스택이 아닙니다.
+표적 할당을 위한 분산형 선택지도 있지만, 물리 업데이트와 전투 결과는 시뮬레이터 한 곳에서 계산합니다. 중심 학습 흐름은 기체의 의사결정과 비행을 관찰하고 수정하는 것입니다. 이 환경은 실제 전투기나 실기체 통신을 재현하지 않습니다.
 
 ## 역할의 세 층
 
 | 층 | 질문 | 책임 |
 |---|---|---|
-| Mission / Assigner | “누가 누구를 맡을까?” | 살아 있는 적 표적 중 추격 대상 선택 |
-| Behavior / BT | “지금 어떤 행동이 우선인가?” | 경계 복귀, 아군 분리, 추격, 대기 같은 명시적 규칙 |
-| Maneuver / Brain | “그 표적에 어떻게 접근할까?” | 관측에 따라 방향·속도·고도 행동 선택 |
-| World / Backend | “명령 뒤에 무슨 일이 일어났나?” | 항공기 상태, 무장, 피해, 종료와 점수 계산 |
+| 관측 / Observation | “기체가 지금 무엇을 아는가?” | 내 기체와 상대의 상태를 조종기 입력으로 표현 |
+| 규칙 / BT | “어떤 규칙을 먼저 적용할까?” | 경계 복귀, 추격, 이탈, 대기 등 사람이 정한 조건과 행동 |
+| RL 정책 / Brain | “관측을 보고 어떤 기동을 택할까?” | 규칙 기반 파일럿 또는 보상으로 학습된 정책 |
+| 비행 / 교전 모델 | “그 명령 뒤 무슨 일이 일어나나?” | 항공기 상태와 무장·피해를 간략 모델로 갱신 |
+| 임무 할당 (N:M) | “편대에서 누가 어느 적을 맡을까?” | 여러 기체의 표적 선택을 돕는 보조 계층 |
 
-할당기는 항공기 제어를 하지 않고, BT는 승패를 직접 계산하지 않습니다.
-이 경계 덕분에 같은 조종기를 다른 규모에서 시험하거나, 조종기를 유지한 채 할당 알고리즘만 비교할 수 있습니다.
+BT는 규칙을 구조화해 실행하지만 스스로 학습하지 않습니다. PPO는 별도의 학습 과정에서 정책을 업데이트합니다. 할당기는 N:M에서 표적을 정할 뿐, 항공기를 직접 조종하지 않습니다.
 
 ## 코드 따라가기
 
@@ -32,23 +31,31 @@ scripts/run_swarm.py
    │ SwarmConfig + AssignmentConfig 생성
    ▼
 swarm_aircombat/envs/swarm_pursuit.py
-   ├── assignment/registry.py → 할당 알고리즘
-   ├── bt/swarm_tree.py       → safety/deconflict/pursue/loiter
-   ├── bt/brain.py            → 조종기 생성
-   ├── rl/state.py            → RL 관측 벡터
-   └── core/aircraft.py       → 비행 명령을 물리 상태로 적용
+   ├── rl/state.py            → 현재 상태를 정책 관측으로 변환
+   ├── bt/swarm_tree.py       → 규칙과 행동 우선순위 구성
+   ├── bt/brain.py            → 규칙·BT·학습 정책 연결
+   ├── core/aircraft.py       → 비행 명령으로 항공기 상태 갱신
+   ├── core/engagement.py     → 사격 조건과 피해 갱신
+   └── assignment/            → N:M 표적 배분 (선택 확장)
 ```
 
 찾기 시작점:
 
 - 환경과 step 순서: `swarm_aircombat/envs/swarm_pursuit.py`
-- 편대 설정과 플러그인 선택: `SwarmConfig`, `assignment/registry.py`
+- 편대 설정과 조종기 선택: `SwarmConfig`, `bt/brain.py`
 - BT 엔진과 군집 트리: `swarm_aircombat/bt/core.py`, `swarm_aircombat/bt/swarm_tree.py`
 - 파일럿을 선택하는 공통 경로: `swarm_aircombat/bt/brain.py`
 - 관측·보상: `swarm_aircombat/rl/state.py`, `swarm_aircombat/rl/reward.py`
 - 학습·평가·실행 스크립트: `scripts/train.py`, `scripts/compare.py`, `scripts/run_swarm.py`
 
-## 4v20에서 “분산”과 “중앙” 구분하기
+## 항공기 모델은 얼마나 현실적인가?
+
+기본 point-mass 모델은 빠른 학습 반복을 위한 간략화된 운동 모델입니다. JSBSim
+옵션은 F-16 모델과 자동조종기를 사용하지만, 선택형 모델을 쓴다는 사실이 현실
+전투 재현이나 전술 검증을 의미하지는 않습니다. 두 설정에서 같은 행동이 어떻게
+다르게 움직이는지 학습 주제로 삼을 수 있습니다.
+
+## N:M에서 “분산”과 “중앙” 구분하기
 
 `hungarian`은 팀의 비용 행렬 전체를 계산해 전역 최소 비용 배정을 구하는 **중앙 기준선**입니다.
 `cbba`, `first_claimed`, `grape`는 각 기체가 감지 범위 안의 표적 비용을 만들고 통신 범위 내 이웃과 정보 교환을 하는 **분산형 적응 알고리즘**입니다.
@@ -61,4 +68,4 @@ swarm_aircombat/envs/swarm_pursuit.py
 3. 파일럿의 `info`가 어디서 만들어지고 `State`가 어떻게 숫자 벡터로 바꾸는지 추적합니다.
 4. [용어 사전](../reference/glossary.md)에서 모르는 개념을 확인합니다.
 
-다음: [Behavior Tree로 규칙 표현하기](03-behavior-trees.md)
+다음: [규칙 기반 조종과 Behavior Tree](03-behavior-trees.md)

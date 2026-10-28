@@ -1,8 +1,11 @@
 # SKY Simulator Lab — Tutorial Website
 
-This is the standalone documentation website for the `swarm-aircombat`
-simulator project. It is intentionally kept outside the simulator's Python
-package and source tree.
+This is the standalone learning guide for `swarm-aircombat`, a fighter-air-combat
+simulator used to practice rule-based control, Behavior Trees, and
+reinforcement learning. It is intentionally kept outside the simulator's
+Python package and source tree. The goal is to help learners inspect and modify
+decision-making in simulation, not to claim real-world combat fidelity or
+research-grade validation.
 
 ## Local layout
 
@@ -15,7 +18,10 @@ src/
 ```
 
 The tutorials refer to files and commands in `swarm-aircombat`. Follow the
-simulator's install and execution commands from that repository's root.
+simulator's install and execution commands from that repository's root. The
+recommended path focuses on a first fighter engagement, rule-based pilots and
+BT, then PPO training and result interpretation. N:M allocation and external
+assignment plugins are optional extension lessons.
 The source repository currently has no configured public Git remote, so pages
 refer to source paths by their repository-relative names rather than linking to
 an invented hosting URL.
