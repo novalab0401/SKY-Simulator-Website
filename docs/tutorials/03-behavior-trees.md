@@ -74,7 +74,51 @@ heading·속도·고도 목표를 따라가며, 속도·선회·상승률 제한
 없습니다. `Break` 같은 이름도 이 행동 조합을 만드는 프로젝트 내부 규칙이지,
 실제 기동을 정밀하게 재현한다는 뜻은 아닙니다.
 
-## 직접 조종면 입력: 연속 제어 실험
+## 기동 의도에서 조종면으로: 첫 BT 기동
+
+BT 액션마다 조종면 값을 직접 지정하는 대신, 기동 액션은 **의도**를 내고 내부
+제어기가 이를 JSBSim 입력으로 변환할 수 있습니다.
+
+```text
+BT Action -> ManeuverIntent(목표 뱅크, 하중배수, 비행경로각, 스로틀)
+          -> JSBSim 내부 제어기 -> 에일러론/엘리베이터/방향타/스로틀
+```
+
+첫 예제 `swarm_aircombat/bt/trees/level-flight.xml`은 `LevelFlight` 액션 하나만 가진
+BT입니다. 액션은 **목표 뱅크 0°, 하중배수 1g, 비행경로각 0°, 스로틀 0.6**을
+요청합니다. 항공기 제어기가 bank/rate, 하중배수와 비행경로각 오차를 사용해
+조종면 명령을 만듭니다. 지금은 고정된 목표값인 한 단계짜리 기동입니다.
+상태에 따라 목표를 바꾸거나 여러 단계로 이어지는 기동은 아직 추가하지 않았습니다.
+
+이 BT 액션은 N:M 환경의 팀 Brain으로 사용할 수 있고, `backend: jsbsim`,
+`control_mode: continuous`가 필요합니다. `training.side` 팀에 설정하면 그 Brain이
+외부 정책으로 제출한 intent를 실행하고, 반대편 팀에 설정하면 고정 Brain으로
+실행합니다. 예를 들어 다음 설정은 Blue의 LevelFlight BT와 Red의 `lead`를 실행합니다.
+
+```yaml
+team:
+  blue: {count: 1, brain: level-flight.xml, behavior: null}
+  red: {count: 1, brain: lead, behavior: null}
+training: {side: blue, control_mode: continuous}
+simulation: {backend: jsbsim}
+evaluation: {episodes: 1, render: false}
+```
+
+`python scripts/run_swarm.py`로 실행합니다. `training.side: red`로 바꾸고 두 Brain을
+서로 바꾸면 반대편 조합도 시험할 수 있습니다. 기존 `Pursue`·`Break` XML 액션은
+여전히 이산 setpoint를 출력합니다.
+
+확인 테스트:
+
+```bash
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_swarm.py -q -k level_flight
+```
+
+테스트는 BT의 intent 출력, 처음 기울어진 JSBSim 기체의 날개 수평 복귀와 고도
+변화, N:M 환경의 학습 측·고정 측 XML Brain 경로를 확인합니다. 이 테스트는
+기초 제어 동작을 점검하는 것이지 공중전 성능이나 실제 전술을 검증하지는 않습니다.
+
+## 정책의 직접 조종면 입력: 연속 제어
 
 JSBSim 백엔드를 선택하고 `training.control_mode: continuous`로 바꾸면 학습 정책의
 행동은 `[-1, 1]` 범위의 네 값입니다.
@@ -99,10 +143,11 @@ simulation:
   backend: jsbsim
 ```
 
-이 모드에서 기존 `Discrete(27)` 액션도 호환 목적으로 받을 수 있지만 그 경우에는
+연속 RL 정책은 조종면 입력을 직접 출력합니다. 이와 별도로 위 BT 기동은 의도를
+출력하고 내부 제어기가 조종면을 만듭니다. 이 모드에서 기존 `Discrete(27)` 액션도
+호환 목적으로 받을 수 있지만 그 경우에는
 오토파일럿 setpoint 경로를 탑니다. 현재 XML BT의 `Pursue`·`Break` 등은 이산
-setpoint를 만들며 연속 조종면 벡터를 직접 출력하지 않습니다. 따라서 XML BT를
-연속 제어 모드로 바꾼다고 BT의 기동이 자동으로 네 조종축으로 변환되지는 않습니다.
+setpoint를 만들며 조종면 벡터나 `LevelFlight`와 같은 기동 의도를 출력하지 않습니다.
 직접 제어 정책의 상태에는 기존 25개 채널에 자세각, 비행경로각, p/q/r 각속도
 피드백이 추가됩니다.
 

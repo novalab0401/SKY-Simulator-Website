@@ -9,7 +9,7 @@ SKY의 목적은 전투기 시뮬레이션에서 규칙 기반 조종, Behavior 
 - 기본 `pointmass`는 학습을 빠르게 반복하기 위한 간략화된 기동 모델입니다. JSBSim은 별도 의존성이 필요한 선택형 F-16 백엔드입니다.
 - 기본 `discrete` 행동은 heading/speed/altitude setpoint이며, 오토파일럿을 거쳐 비행합니다.
 - `continuous` 행동은 JSBSim에서만 지원하는 정규화된 roll/pitch/rudder/throttle 입력입니다. 조종면·스로틀 명령이 실제 F-16 비행 제어계를 완전하게 대체하거나 제한·손상·엔진 고장 등을 모델링한다는 뜻은 아닙니다.
-- 현재 XML/Python BT 예제는 기존 setpoint 명령을 생성합니다. 연속 제어 벡터를 직접 출력하도록 연결된 것은 아닙니다.
+- 기존 `Pursue`·`Break` 등 BT Action은 이산 setpoint를 생성합니다. `LevelFlight`는 JSBSim 연속 모드에서 팀 Brain으로 사용하는 첫 ManeuverIntent 예제입니다. 일반적인 XML BT의 직접 조종면 출력과 단계형 기동은 아직 지원하지 않습니다.
 - 연속 PPO/SAC 학습 경로가 구현되어 있어도 정책이 안정적으로 조종하거나 우수한 기동을 학습했다는 보장은 없습니다.
 - 현 무장/WEZ 시스템은 유도 미사일 비행, 단발 확률적 격추, 대응수단 모델을 포함하지 않습니다.
 - 이산 `Discrete(27)`과 연속 `Box(4,)`는 서로 다른 관측·행동 계약입니다. 과거 체크포인트는 학습 알고리즘, 상태 차원, 행동 공간이 맞아야 합니다.

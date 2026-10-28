@@ -6,7 +6,8 @@
 | Assigner | 편대 기체마다 추격 표적을 정하는 함수 |
 | Behavior Tree (BT) | Condition/Action/Composite 노드의 성공·실패로 행동을 선택하는 계층 구조 |
 | Blackboard | 현재 기체·표적 등 BT 노드가 함께 읽고 결정을 기록하는 스텝별 데이터 |
-| Brain | `info -> Discrete(27)` 또는 연속 `Box(4,)` 행동을 반환하는 파일럿. 규칙, BT/XML tree, PPO, SAC 등을 연결할 수 있습니다. 현재 BT 예제는 setpoint 행동을 반환합니다. |
+| Brain | `info`를 받아 이산 setpoint, 연속 `Box(4,)`, 또는 지원하는 기동 의도를 반환하는 파일럿. 규칙, BT/XML tree, PPO, SAC 등을 연결할 수 있습니다. |
+| Maneuver intent | 목표 뱅크각·하중배수·비행경로각·스로틀을 표현하는 고수준 기동 명령. JSBSim 내부 제어기가 조종면 입력으로 변환합니다. |
 | Rule-based | 사람이 작성한 조건과 행동 규칙으로 의사결정을 만드는 방식. BT는 규칙을 구조화하는 한 가지 방법입니다. |
 | Point-mass | 항공기의 기동을 계산 효율을 위해 간략화한 동역학 모델 |
 | JSBSim | 이 프로젝트에서 선택적으로 사용하는 F-16 항공기 시뮬레이션 백엔드 |

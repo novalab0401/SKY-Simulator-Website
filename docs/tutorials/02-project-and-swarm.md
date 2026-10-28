@@ -65,8 +65,10 @@ swarm_aircombat/envs/swarm_pursuit.py
 - 선택형 `continuous` 모드에서는 JSBSim만 사용하며 정책이
   `[roll, pitch, rudder, throttle]` 네 값을 `[-1, 1]` 범위로 직접 보냅니다.
   이 모드의 관측에는 자세와 p/q/r 각속도 피드백이 추가됩니다.
-- 기존 XML BT 예제의 Action은 여전히 setpoint를 출력합니다. BT로 연속 조종축을
-  직접 만들려면 그 동작 인터페이스를 별도로 구현해야 합니다.
+- 기존 `Pursue`·`Break` XML BT Action은 setpoint를 출력합니다. `LevelFlight`는
+  JSBSim 연속 모드에서 목표 뱅크·하중배수·비행경로각·스로틀 intent를 보내는 첫
+  기동 의도 예제입니다. BT 전체가 조종면을 직접 출력하거나 단계형 기동을
+  구성하는 기능은 아직 아닙니다.
 
 ## 항공기 모델은 얼마나 현실적인가?
 
