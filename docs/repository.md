@@ -39,7 +39,8 @@ src/
 | CBBA-style | [`assignment/cbba.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/assignment/cbba.py) |
 | GRAPE-style | [`assignment/grape.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/assignment/grape.py) |
 | 공통 비용과 통신 합의 helper | [`assignment/cost.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/assignment/cost.py), [`consensus.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/assignment/consensus.py) |
-| 관측·보상·PPO | [`rl/state.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/rl/state.py), [`reward.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/rl/reward.py), [`policy.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/rl/policy.py) |
+| 관측·보상·PPO/SAC 및 학습 연결 | [`rl/state.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/rl/state.py), [`reward.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/rl/reward.py), [`policy.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/rl/policy.py), [`rl/vec.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/rl/vec.py) |
+| JSBSim 연속 조종 입력 | [`core/aircraft.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/core/aircraft.py), [`envs/swarm_pursuit.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/swarm_aircombat/envs/swarm_pursuit.py) |
 | 회귀 테스트 | [`tests/test_swarm.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/tests/test_swarm.py), [`tests/test_distributed_assignment.py`](https://github.com/novalab0401/SKY-Simulator/blob/main/tests/test_distributed_assignment.py) |
 
 사이트의 예제 명령은 시뮬레이터 저장소 루트에서 실행하세요. Python 환경 설치가 되어 있어야 합니다.

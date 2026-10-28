@@ -22,7 +22,7 @@ N:M은 blue N대와 red M대가 싸우는 설정입니다. “군집”이라는
 |---|---|---|
 | 규칙 기반 파일럿 | 기하 조건에 따라 선회·속도·고도를 직접 결정 | `lead` 같은 코드형 Brain |
 | Behavior Tree | 조건과 우선순위로 어떤 행동을 할지 선택 | BT Action이 직접 행동을 내거나 선택한 Brain을 호출 |
-| 학습 정책 | 관측을 받아 행동을 선택 | PPO 정책을 조종기(Brain)로 사용 |
+| 학습 정책 | 관측을 받아 행동을 선택 | PPO 또는 연속 행동용 SAC 정책을 조종기(Brain)로 사용 |
 | 사용자 조합 | 상태에 따라 규칙·BT·정책을 결합 | 사용 목적에 맞춰 의사결정 흐름 구성 |
 
 BT는 사람이 작성한 규칙을 구조화해 실행하는 방법이지, 이 프로젝트에서 자동으로
@@ -57,6 +57,16 @@ swarm_aircombat/envs/swarm_pursuit.py
 - 관측·보상: `swarm_aircombat/rl/state.py`, `swarm_aircombat/rl/reward.py`
 - 항공기·교전 모델: `swarm_aircombat/core/aircraft.py`, `swarm_aircombat/core/engagement.py`
 - 학습·평가·실행 스크립트: `scripts/train.py`, `scripts/compare.py`, `scripts/run_swarm.py`
+
+## 항공기에게 전달하는 두 가지 조종 계약
+
+- 기본 `discrete` 모드에서 에이전트는 27개 heading/speed/altitude setpoint 조합 중
+  하나를 선택합니다. point-mass와 JSBSim의 자동조종기가 해당 목표를 따라갑니다.
+- 선택형 `continuous` 모드에서는 JSBSim만 사용하며 정책이
+  `[roll, pitch, rudder, throttle]` 네 값을 `[-1, 1]` 범위로 직접 보냅니다.
+  이 모드의 관측에는 자세와 p/q/r 각속도 피드백이 추가됩니다.
+- 기존 XML BT 예제의 Action은 여전히 setpoint를 출력합니다. BT로 연속 조종축을
+  직접 만들려면 그 동작 인터페이스를 별도로 구현해야 합니다.
 
 ## 항공기 모델은 얼마나 현실적인가?
 

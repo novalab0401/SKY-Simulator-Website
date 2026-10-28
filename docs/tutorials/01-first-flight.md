@@ -13,7 +13,23 @@ python -m pip install -e ".[train,dev]"
 ```
 
 Windows PowerShell은 `.venv\Scripts\Activate.ps1`로 환경을 활성화합니다.
-처음에는 JSBSim 없이 기본 `pointmass` 백엔드로 시작합니다.
+처음에는 기본 `pointmass` 백엔드로 시작합니다. 직접 조종면 입력을 실험할 때는
+선택 의존성을 추가 설치하고 JSBSim 백엔드를 선택합니다.
+
+```bash
+python -m pip install -e ".[jsbsim,train,dev]"
+```
+
+Windows에서는 활성화 명령이 다릅니다.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[jsbsim,train,dev]"
+```
+
+기본 point-mass 실행은 Windows에서 가볍게 시작할 수 있지만, JSBSim/RL의 전체
+설치와 실행은 플랫폼별로 확인해야 합니다. 이 저장소의 현재 검증 환경은 Linux입니다.
 
 ## 2) 설정에서 전투 시나리오 찾기
 
@@ -29,6 +45,9 @@ team:
     count: 20
     assigner: cbba
     behavior: mixed
+training:
+  side: blue
+  control_mode: discrete
 simulation:
   backend: pointmass
 evaluation:
@@ -40,9 +59,11 @@ evaluation:
 |---|---|
 | `team.blue.count`, `team.red.count` | 아군/적군 항공기 수 (N:M 전투) |
 | `team.*.brain` | 사용할 파일럿: 규칙 기반, BT/XML BT 또는 호환 PPO 체크포인트 |
-| `team.red.behavior` | `brain`이 비어 있을 때 사용할 적기 규칙 기반 행동 |
+| `team.*.behavior` | 해당 팀의 `brain`이 비어 있을 때 사용할 규칙 기반 비행 행동 |
 | `team.blue.brains` | 선택적 기체별 고정 blue 파일럿 목록 |
-| `simulation.backend` | 학습 기본 `pointmass` 또는 선택형 JSBSim F-16 모델 |
+| `training.side` | N:M 환경에서 외부 학습 행동을 받는 팀 |
+| `training.control_mode` | `discrete` 목표점 명령 또는 JSBSim 전용 `continuous` 직접 제어 |
+| `simulation.backend` | 빠른 `pointmass` 또는 선택형 JSBSim F-16 모델 |
 | `team.*.assigner`, `assignment` | 여러 기체의 표적 배분 (첫 학습에서는 생략 가능) |
 | `evaluation` | 실행 판수, 리플레이 표시 여부와 HTML 출력 경로 |
 
@@ -98,6 +119,7 @@ Behavior Tree 기반 파일럿이 됩니다. 두 번 실행한 뒤 리플레이�
 - 터미널의 설정 요약에서 blue/red의 수, Brain, 할당기가 맞는지 봅니다.
 - `evaluation.output`에 리플레이가 기록됐는지 확인합니다.
 - 리플레이에서 파일럿 결정과 항공기 움직임을 함께 봅니다. 명령 변화가 곧바로 좋은 전투 성과를 뜻하는 것은 아닙니다.
+- `discrete`는 기존 방식입니다. `continuous`는 JSBSim과 직접 조종 입력을 익힌 뒤 선택하는 확장 실습입니다.
 
 ## 실습
 

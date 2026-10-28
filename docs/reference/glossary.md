@@ -6,15 +6,18 @@
 | Assigner | 편대 기체마다 추격 표적을 정하는 함수 |
 | Behavior Tree (BT) | Condition/Action/Composite 노드의 성공·실패로 행동을 선택하는 계층 구조 |
 | Blackboard | 현재 기체·표적 등 BT 노드가 함께 읽고 결정을 기록하는 스텝별 데이터 |
-| Brain | `info -> Discrete(27) action` 인터페이스를 제공하는 파일럿. 규칙, BT, XML tree, PPO 등이 등록됩니다. |
+| Brain | `info -> Discrete(27)` 또는 연속 `Box(4,)` 행동을 반환하는 파일럿. 규칙, BT/XML tree, PPO, SAC 등을 연결할 수 있습니다. 현재 BT 예제는 setpoint 행동을 반환합니다. |
 | Rule-based | 사람이 작성한 조건과 행동 규칙으로 의사결정을 만드는 방식. BT는 규칙을 구조화하는 한 가지 방법입니다. |
 | Point-mass | 항공기의 기동을 계산 효율을 위해 간략화한 동역학 모델 |
 | JSBSim | 이 프로젝트에서 선택적으로 사용하는 F-16 항공기 시뮬레이션 백엔드 |
+| Discrete control | heading·속도·고도 setpoint 조합 27개 중 하나를 골라 오토파일럿에 전달하는 행동 모드 |
+| Continuous control | JSBSim에 정규화한 roll·pitch·rudder·throttle 네 값을 직접 보내는 행동 모드 |
+| PPO | 정책과 가치 함수를 업데이트하는 on-policy 강화학습 알고리즘 |
+| SAC | 연속 행동 공간을 지원하는 off-policy 강화학습 알고리즘 |
 | CBBA-style | 입찰 효용과 이웃 consensus를 적용한 이 프로젝트의 단일 표적 할당 적응 |
 | Episode | reset부터 승패/시간 제한 종료까지의 시뮬레이션 한 판 |
 | Hungarian | 중앙에서 전체 비용 행렬을 최소화하는 할당 기준 알고리즘 |
 | Observation | 정책 입력으로 바뀐 현재 교전 상태 |
-| PPO | 정책과 가치 함수를 업데이트하는 on-policy 강화학습 알고리즘 |
 | Reward | 한 스텝의 행동이 목표에 얼마나 기여했는지 표현하는 학습 신호 |
 | Seed | 난수 생성 초기값. 같은 시드의 paired episode는 같은 초기 배치를 재사용합니다. |
 | Selector | 자식 중 첫 `FAILURE`가 아닌 결과를 반환하는 BT 합성 노드 |
