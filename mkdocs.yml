@@ -1,0 +1,57 @@
+site_name: SKY Simulator Lab
+site_description: BT, 강화학습, 분산 표적 할당으로 배우는 군집 공중전 프로젝트
+site_url: https://novalab0401.github.io/SKY-Simulator-Website/
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  language: ko
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - search.highlight
+  palette:
+    - scheme: slate
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: 라이트 모드
+    - scheme: default
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: 다크 모드
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+nav:
+  - 시작: index.md
+  - 프로젝트:
+      - 소스 저장소 안내: repository.md
+  - 학습 경로:
+      - 프로젝트와 첫 실행: tutorials/01-first-flight.md
+      - 구조와 군집전: tutorials/02-project-and-swarm.md
+      - Behavior Tree: tutorials/03-behavior-trees.md
+      - 강화학습: tutorials/04-reinforcement-learning.md
+      - 분산 할당: tutorials/05-assignment-algorithms.md
+      - 직접 개발하기: tutorials/06-build-a-plugin.md
+      - 검증과 다음 실험: tutorials/07-evaluate-and-extend.md
+  - 참고:
+      - 용어 사전: reference/glossary.md
+      - 이 프로젝트의 한계: reference/limitations.md
